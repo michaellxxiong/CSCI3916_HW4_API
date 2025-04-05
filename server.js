@@ -191,14 +191,28 @@ router.route('/movies/:movieId')
         return res.status(404).json({ success: false, message: 'Movie not found' });
       }
   
+      // Debugging: Print the movie details
+      console.log("Movie found:", movie);
+  
       // If the query parameter 'reviews' is true, fetch the reviews for the movie
       if (reviews === 'true') {
-        const reviews = await Review.find({ movie: movieObjectId });
+        // Check if reviews exist in the database for this movie
+        const reviewsData = await Review.find({ movie: movieObjectId });
+  
+        // Debugging: Print the reviews fetched
+        console.log("Reviews found:", reviewsData);
+  
+        if (reviewsData.length === 0) {
+          return res.status(404).json({
+            success: false,
+            message: 'No reviews found for this movie'
+          });
+        }
   
         return res.json({
           success: true,
           movie,
-          reviews
+          reviews: reviewsData
         });
       }
   
