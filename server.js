@@ -203,7 +203,7 @@ router.route('/movies/:movieId')
 
             movieQuery = Movie.aggregate([
                 {
-                    $match: { _id: mongoose.Types.ObjectId(movieId) }  // Convert movieId to ObjectId for $match
+                    $match: { _id: movieId } 
                 },
                 {
                     $lookup: {
