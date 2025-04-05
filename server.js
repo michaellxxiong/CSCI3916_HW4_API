@@ -194,14 +194,18 @@ router.route('/movies/:movieId')
 
         console.log(`movieId is valid: ${mongoose.Types.ObjectId.isValid(movieId)}`); // Log validation result
 
-        // Default to finding a single movie if reviews are not requested
-        let movieQuery = Movie.findById(movieId);
+        // If the 'reviews' query parameter is true, we will perform an aggregation to get reviews
+        let movieQuery = Movie.findById(movieId);  // Default to finding a single movie
 
-        // If 'reviews=true' is provided, perform aggregation to include reviews
         if (reviews === 'true') {
             console.log("Performing aggregation to include reviews...");
 
             movieQuery = Movie.aggregate([
+                { 
+                    $match: { 
+                        _id: mongoose.Types.ObjectId(movieId)  // Convert movieId to ObjectId for $match
+                    } 
+                },
                 {
                     $lookup: {
                         from: 'reviews', // The collection containing reviews
@@ -216,6 +220,7 @@ router.route('/movies/:movieId')
         // Execute the query
         const movie = await movieQuery;
 
+        // Log the result of the query to check if it's returning what we expect
         console.log('Query result:', movie);
 
         // If the movie is not found, return a 404
