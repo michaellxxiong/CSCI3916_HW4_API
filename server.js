@@ -5,7 +5,8 @@ var authJwtController = require('./auth_jwt');
 var jwt = require('jsonwebtoken');
 var cors = require('cors');
 const User = require('./Users');
-const Movie = require('./Movies'); // You're not using Movie, consider removing it
+const Movie = require('./Movies');
+const Review = require('./Reviews');
 
 const app = express();
 app.use(cors());
@@ -289,6 +290,75 @@ router.route('/movies/:movieId')
     return res.status(500).json({ success: false, message: 'Post request not supported' });
   });
   
+app.use('/', router);
+
+//Route for reviews
+router.route('/movies/:movieId/review')
+
+.get(async (req, res) => {
+  return res.status(500).json({ success: false, message: 'GET request not supported' });
+})
+
+.post(authJwtController.isAuthenticated, async (req, res) => {
+  const { movieId } = req.params;  // Extract movieId from URL parameters
+    const { username, review, rating } = req.body;  // Extract data from the request body
+
+    // Validate that required fields are provided
+    if (!username || !review || rating == null) {
+        return res.status(400).json({
+            success: false,
+            message: 'username, review, and rating are required.'
+        });
+    }
+
+    // Validate the movieId format
+    if (!mongoose.Types.ObjectId.isValid(movieId)) {
+        return res.status(400).json({
+            success: false,
+            message: 'Invalid movieId format.'
+        });
+    }
+
+    try {
+        // Create a new review document
+        const newReview = new Review({
+            movieId: movieId,  // Reference to the movie
+            username: username,
+            review: review,
+            rating: rating
+        });
+
+        // Save the new review to the database
+        await newReview.save();
+
+        // Return the newly created review
+        return res.status(201).json({
+            success: true,
+            message: 'Review added successfully.',
+            review: newReview
+        });
+
+    } catch (err) {
+        console.error('Error adding review:', err.message);
+        return res.status(500).json({
+            success: false,
+            message: 'Error adding review',
+            error: err.message
+        });
+    }
+
+})
+
+//Put is not supported in /movies
+.put(async (req, res) => {
+  return res.status(500).json({ success: false, message: 'PUT request not supported' });
+})
+
+//Delete is not supported in /movies
+.delete(async (req, res) => {
+  return res.status(500).json({ success: false, message: 'DELETE request not required' });
+});
+
 app.use('/', router);
 
 
