@@ -182,7 +182,7 @@ router.route('/movies/:movieId')
 
     try {
       // Convert movieId to ObjectId using the 'new' keyword to avoid TypeError
-      const movieObjectId = new mongoose.Types.ObjectId(movieId);
+      const movieObjectId = movieId;
 
       // Find the movie by its ID
       const movie = await Movie.findById(movieObjectId);
