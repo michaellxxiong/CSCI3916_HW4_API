@@ -182,7 +182,7 @@ router.route('/movies/:movieId')
 
     try {
       // Convert movieId to ObjectId using the 'new' keyword to avoid TypeError
-      const movieObjectId = movieId;
+      const movieObjectId = movieId.toString();
 
       // Find the movie by its ID
       const movie = await Movie.findById(movieObjectId);
