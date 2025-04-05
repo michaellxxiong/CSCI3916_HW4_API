@@ -177,73 +177,37 @@ app.use('/', router);
 //DELETE - delete a movie given movieID
 router.route('/movies/:movieId')
   .get(authJwtController.isAuthenticated, async (req, res) => {
-    const { movieId } = req.params;  // Extract movieId from URL parameters
-    const { reviews } = req.query;   // Extract 'reviews' query parameter
-
-    console.log(`Received movieId: ${movieId}`); // Log the movieId
-    console.log(`Received reviews query parameter: ${reviews}`); // Log the reviews query
+    const { movieId } = req.params; // Extract the movieId from the URL
+  const { reviews } = req.query; // Extract the query parameter 'reviews'
 
     try {
-        // Validate the movieId format
-        if (!mongoose.Types.ObjectId.isValid(movieId)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid movieId format.'
-            });
-        }
+      // Convert movieId to ObjectId to ensure it works with MongoDB
+      const movie = await Movie.findById(mongoose.Types.ObjectId(movieId));
 
-        console.log(`movieId is valid: ${mongoose.Types.ObjectId.isValid(movieId)}`); // Log validation result
+      if (!movie) {
+        return res.status(404).json({ success: false, message: 'Movie not found' });
+      }
 
-        // Default to finding a single movie if reviews are not requested
-        let movieQuery = Movie.findById(movieId);
-
-        // If 'reviews=true' is provided, perform aggregation to include reviews
-        if (reviews === 'true') {
-            console.log("Performing aggregation to include reviews...");
-
-            movieQuery = Movie.aggregate([
-                {
-                    $match: { _id: mongoose.Types.ObjectId(movieId) }  // Convert movieId to ObjectId for $match
-                },
-                {
-                    $lookup: {
-                        from: 'reviews', // The collection containing reviews
-                        localField: '_id', // Field in the 'Movie' collection
-                        foreignField: 'movieId', // Field in the 'Review' collection
-                        as: 'reviews' // The output array containing the reviews
-                    }
-                }
-            ]);
-        }
-
-        // Execute the query
-        const movie = await movieQuery;
-
-        console.log('Query result:', movie);
-
-        // If the movie is not found, return a 404
-        if (!movie || movie.length === 0) {
-            return res.status(404).json({
-                success: false,
-                message: `Movie with id "${movieId}" not found.`
-            });
-        }
-
-        // If reviews are included, the result will have the reviews array
-        const movieData = movie[0]; // Since aggregation returns an array, access the first element
-
-        return res.status(200).json({
-            success: true,
-            movie: movieData // This will include movie details along with reviews if 'reviews=true'
+      // If the query parameter 'reviews' is true, get the reviews
+      if (reviews === 'true') {
+        // Assuming the Movie model has a 'reviews' field that holds references to reviews
+        const reviews = await Review.find({ movie: mongoose.Types.ObjectId(movieId) });
+        return res.json({
+          success: true,
+          movie,
+          reviews
         });
+      }
 
-    } catch (err) {
-        console.error('Error retrieving movie:', err.message);
-        return res.status(500).json({
-            success: false,
-            message: "Error retrieving movie",
-            error: err.message
-        });
+      // If reviews is not 'true', just return the movie data
+      return res.json({
+        success: true,
+        movie
+      });
+
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ success: false, message: 'Error retrieving movie' });
     }
   })
 
