@@ -191,7 +191,7 @@ router.route('/movies/:movieId')
       // If the query parameter 'reviews' is true, get the reviews
       if (reviews === 'true') {
         // Assuming the Movie model has a 'reviews' field that holds references to reviews
-        const reviews = await Review.find({ movie: mongoose.Types.ObjectId(movieId) });
+        const reviews = await Review.find({ movieId });
         return res.json({
           success: true,
           movie,
