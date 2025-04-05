@@ -177,8 +177,6 @@ app.use('/', router);
 //DELETE - delete a movie given movieID
 router.route('/movies/:movieId')
   // Get movie given movieId
-  router.route('/movies/:movieId')
-  // Get movie given movieId
   .get(authJwtController.isAuthenticated, async (req, res) => {
     const { movieId } = req.params;  // Extract movieId from URL parameters
     const { reviews } = req.query;   // Extract 'reviews' query parameter
@@ -197,7 +195,7 @@ router.route('/movies/:movieId')
 
         if (reviews === 'true') {
             movieQuery = Movie.aggregate([
-                { $match: { _id: mongoose.Types.ObjectId(movieId) } },  // Convert movieId to ObjectId
+                { $match: { _id: mongoose.Types.ObjectId(movieId) } },  // Convert movieId to ObjectId for $match
                 {
                     $lookup: {
                         from: 'reviews', // The collection containing reviews
@@ -225,6 +223,7 @@ router.route('/movies/:movieId')
 
         return res.status(200).json({
             success: true,
+            movie,
             movie: movieData // This will include movie details along with reviews if 'reviews=true'
         });
 
