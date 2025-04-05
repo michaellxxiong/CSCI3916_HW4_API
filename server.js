@@ -177,24 +177,33 @@ app.use('/', router);
 //DELETE - delete a movie given movieID
 router.route('/movies/:movieId')
   // Get movie given movieId
+  router.route('/movies/:movieId')
+  // Get movie given movieId
   .get(authJwtController.isAuthenticated, async (req, res) => {
     const { movieId } = req.params;  // Extract movieId from URL parameters
     const { reviews } = req.query;   // Extract 'reviews' query parameter
 
     try {
-        // Find the movie by its ObjectId
-        let movieQuery = Movie.findById(movieId);
+        // Validate the movieId format
+        if (!mongoose.Types.ObjectId.isValid(movieId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid movieId format.'
+            });
+        }
 
         // If the 'reviews' query parameter is true, we will perform an aggregation to get reviews
+        let movieQuery = Movie.findById(movieId);  // Default to finding a single movie
+
         if (reviews === 'true') {
             movieQuery = Movie.aggregate([
-                { $match: { _id: mongoose.Types.ObjectId(movieId) } },
+                { $match: { _id: mongoose.Types.ObjectId(movieId) } },  // Convert movieId to ObjectId
                 {
                     $lookup: {
                         from: 'reviews', // The collection containing reviews
-                        localField: '_id', // Field from the 'Movie' collection
-                        foreignField: 'movieId', // Field from the 'Review' collection
-                        as: 'reviews' // The output array that will contain all reviews
+                        localField: '_id', // Field in the 'Movie' collection
+                        foreignField: 'movieId', // Field in the 'Review' collection
+                        as: 'reviews' // The output array containing the reviews
                     }
                 }
             ]);
@@ -228,7 +237,6 @@ router.route('/movies/:movieId')
         });
     }
   })
-
 
   //Update movie given movieId
   .put(authJwtController.isAuthenticated, async (req, res) => {
