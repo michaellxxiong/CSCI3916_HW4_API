@@ -294,7 +294,8 @@ router.route('/movies/:movieId')
   
 app.use('/', router);
 
-//Route for reviews
+//----------------------------------------------------------------------------------------------------------
+//Route for adding reviews
 router.route('/movies/:movieId/review')
 
 .get(async (req, res) => {
@@ -322,6 +323,16 @@ router.route('/movies/:movieId/review')
     }
 
     try {
+        // Check if the movie exists in the Movie collection
+        const movieExists = await Movie.findById(movieId);
+        
+        if (!movieExists) {
+            return res.status(404).json({
+                success: false,
+                message: `Movie with id "${movieId}" does not exist in the movie collection.`
+            });
+        }
+
         // Create a new review document
         const newReview = new Review({
             movieId: movieId,  // Reference to the movie
