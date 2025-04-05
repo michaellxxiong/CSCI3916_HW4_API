@@ -179,49 +179,50 @@ router.route('/movies/:movieId')
   .get(authJwtController.isAuthenticated, async (req, res) => {
     const { movieId } = req.params; // Extract the movieId from the URL
     const { reviews } = req.query; // Extract the query parameter 'reviews'
-  
+
     try {
       // Convert movieId to ObjectId using the 'new' keyword to avoid TypeError
       const movieObjectId = new mongoose.Types.ObjectId(movieId);
-  
+
       // Find the movie by its ID
       const movie = await Movie.findById(movieObjectId);
-  
+
       if (!movie) {
         return res.status(404).json({ success: false, message: 'Movie not found' });
       }
-  
-      // Debugging: Print the movie details
+
+      // Debugging: Print the movie details and movieId
       console.log("Movie found:", movie);
-  
+      console.log("Looking for reviews for movieId:", movieObjectId);
+
       // If the query parameter 'reviews' is true, fetch the reviews for the movie
       if (reviews === 'true') {
         // Check if reviews exist in the database for this movie
         const reviewsData = await Review.find({ movie: movieObjectId });
-  
+
         // Debugging: Print the reviews fetched
         console.log("Reviews found:", reviewsData);
-  
+
         if (reviewsData.length === 0) {
           return res.status(404).json({
             success: false,
             message: 'No reviews found for this movie'
           });
         }
-  
+
         return res.json({
           success: true,
           movie,
           reviews: reviewsData
         });
       }
-  
+
       // If reviews is not 'true', just return the movie data
       return res.json({
         success: true,
         movie
       });
-  
+
     } catch (error) {
       console.error(error);
       return res.status(500).json({ success: false, message: 'Error retrieving movie' });
