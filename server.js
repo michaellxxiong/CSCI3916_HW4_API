@@ -180,7 +180,6 @@ router.route('/movies/:movieId')
     const { movieId } = req.params;  // Extract movieId from URL parameters
     const { reviews } = req.query;   // Extract 'reviews' query parameter
 
-    console.log(`Received movieId: ${movieId}`); // Log the movieId
     console.log(`Received reviews query parameter: ${reviews}`); // Log the reviews query
 
     try {
@@ -192,20 +191,13 @@ router.route('/movies/:movieId')
             });
         }
 
-        console.log(`movieId is valid: ${mongoose.Types.ObjectId.isValid(movieId)}`); // Log validation result
-
-        // If the 'reviews' query parameter is true, we will perform an aggregation to get reviews
         let movieQuery = Movie.findById(movieId);  // Default to finding a single movie
 
+        // If 'reviews=true' is provided, perform aggregation to include reviews
         if (reviews === 'true') {
             console.log("Performing aggregation to include reviews...");
 
             movieQuery = Movie.aggregate([
-                { 
-                    $match: { 
-                        _id: mongoose.Types.ObjectId(movieId)  // Convert movieId to ObjectId for $match
-                    } 
-                },
                 {
                     $lookup: {
                         from: 'reviews', // The collection containing reviews
@@ -220,7 +212,7 @@ router.route('/movies/:movieId')
         // Execute the query
         const movie = await movieQuery;
 
-        // Log the result of the query to check if it's returning what we expect
+        // Log the result of the query
         console.log('Query result:', movie);
 
         // If the movie is not found, return a 404
@@ -231,12 +223,11 @@ router.route('/movies/:movieId')
             });
         }
 
-        // If reviews are included, the result will have the reviews array
         const movieData = movie[0]; // Since aggregation returns an array, access the first element
 
         return res.status(200).json({
             success: true,
-            movie: movieData // This will include movie details along with reviews if 'reviews=true'
+            movie: movieData
         });
 
     } catch (err) {
