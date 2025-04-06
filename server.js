@@ -140,6 +140,7 @@ router.route('/movies')
   })
 
   //Get all movies
+  //Updated to include all reviews for all movies retieved
   .get(authJwtController.isAuthenticated, async (req, res) => {
     const { reviews } = req.query;  // Extract 'reviews' query parameter
 
@@ -216,14 +217,55 @@ app.use('/', router);
 //DELETE - delete a movie given movieID
 router.route('/movies/:movieId')
   //Get movie given movieId
-  .get(authJwtController.isAuthenticated, async (req, res) => {
+  .get(async (req, res) => {
     const { movieId } = req.params;  // Extract movieId from URL parameters
+    const { reviews } = req.query;   // Extract 'reviews' query parameter
 
     try {
-        // Find the movie by its ObjectId
-        const movie = await Movie.findById(movieId);
+        // Validate if movieId is a valid ObjectId
+        if (!mongoose.Types.ObjectId.isValid(movieId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid movieId format.'
+            });
+        }
 
-        // If the movie is not found, return a 404
+        let movieQuery;
+
+        if (reviews === 'true') {
+            // Aggregate a single movie and its reviews
+            movieQuery = Movie.aggregate([
+                {
+                    $match: { _id: new mongoose.Types.ObjectId(movieId) }
+                },
+                {
+                    $lookup: {
+                        from: 'reviews', // Join with 'reviews' collection
+                        localField: '_id', // Movie _id
+                        foreignField: 'movieId', // Review movieId
+                        as: 'reviews' // Output array of reviews
+                    }
+                },
+                {
+                    $addFields: {
+                        avgRating: {
+                            $cond: {
+                                if: { $gt: [{ $size: "$reviews" }, 0] },
+                                then: { $avg: "$reviews.rating" }, // Calculate average rating
+                                else: null
+                            }
+                        }
+                    }
+                }
+            ]);
+        } else {
+            // If no reviews query, just return the movie without reviews
+            movieQuery = Movie.findById(movieId);
+        }
+
+        const movie = await movieQuery;
+
+        // If movie is not found, return 404
         if (!movie) {
             return res.status(404).json({
                 success: false,
@@ -231,14 +273,14 @@ router.route('/movies/:movieId')
             });
         }
 
-        // Return the found movie
+        // Return the movie with or without reviews
         return res.status(200).json({
             success: true,
-            movie
+            movie: movie[0] || movie // For aggregation, movie is in array; otherwise, return the movie
         });
 
     } catch (err) {
-        console.error('Error retrieving movie:', err.message);
+        console.error("Error fetching movie:", err);
         return res.status(500).json({
             success: false,
             message: "Error retrieving movie",
