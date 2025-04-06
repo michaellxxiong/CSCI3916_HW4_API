@@ -146,7 +146,7 @@ router.route('/movies')
     try {
         let moviesQuery;
 
-        if (reviews === 'true')
+        if (reviews === 'true') {
             // Aggregate movies and their reviews with avgRating
             moviesQuery = Movie.aggregate([
                 {
