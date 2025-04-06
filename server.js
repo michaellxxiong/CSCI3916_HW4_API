@@ -299,7 +299,45 @@ app.use('/', router);
 router.route('/movies/:movieId/review')
 
 .get(async (req, res) => {
-  return res.status(500).json({ success: false, message: 'GET request not supported' });
+  const { movieId } = req.params;  // Extract movieId from URL parameters
+
+  // Log the movieId to verify it's being passed correctly
+  console.log(`Received movieId: ${movieId}`);
+
+  try {
+      // Validate the movieId format
+      if (!mongoose.Types.ObjectId.isValid(movieId)) {
+          return res.status(400).json({
+              success: false,
+              message: 'Invalid movieId format.'
+          });
+      }
+
+      // Find all reviews associated with the movieId
+      const reviews = await Review.find({ movieId: movieId });
+
+      // If no reviews are found, return a message
+      if (reviews.length === 0) {
+          return res.status(404).json({
+              success: false,
+              message: `No reviews found for movie with id "${movieId}".`
+          });
+      }
+
+      // If reviews are found, return them
+      return res.status(200).json({
+          success: true,
+          reviews: reviews
+      });
+
+  } catch (err) {
+      console.error('Error retrieving reviews:', err.message);
+      return res.status(500).json({
+          success: false,
+          message: 'Error retrieving reviews',
+          error: err.message
+      });
+  }
 })
 
 .post(authJwtController.isAuthenticated, async (req, res) => {
