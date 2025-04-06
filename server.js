@@ -176,56 +176,35 @@ app.use('/', router);
 //PUT - update a movie given movieID
 //DELETE - delete a movie given movieID
 router.route('/movies/:movieId')
+  //Get movie given movieId
   .get(authJwtController.isAuthenticated, async (req, res) => {
-    const { movieId } = req.params; // Extract the movieId from the URL
-    const { reviews } = req.query; // Extract the query parameter 'reviews'
+    const { movieId } = req.params;  // Extract movieId from URL parameters
 
     try {
-      // Convert movieId to ObjectId using the 'new' keyword to avoid TypeError
-      const movieObjectId = movieId.toString();
+        // Find the movie by its ObjectId
+        const movie = await Movie.findById(movieId);
 
-      // Find the movie by its ID
-      const movie = await Movie.findById(movieObjectId);
-
-      if (!movie) {
-        return res.status(404).json({ success: false, message: 'Movie not found' });
-      }
-
-      // Debugging: Print the movie details and movieId
-      console.log("Movie found:", movie);
-      console.log("Looking for reviews for movieId:", movieObjectId);
-
-      // If the query parameter 'reviews' is true, fetch the reviews for the movie
-      if (reviews === 'true') {
-        // Check if reviews exist in the database for this movie
-        const reviewsData = await Review.find({ movie: movieObjectId });
-
-        // Debugging: Print the reviews fetched
-        console.log("Reviews found:", reviewsData);
-
-        if (reviewsData.length === 0) {
-          return res.status(404).json({
-            success: false,
-            message: 'No reviews found for this movie'
-          });
+        // If the movie is not found, return a 404
+        if (!movie) {
+            return res.status(404).json({
+                success: false,
+                message: `Movie with id "${movieId}" not found.`
+            });
         }
 
-        return res.json({
-          success: true,
-          movie,
-          reviews: reviewsData
+        // Return the found movie
+        return res.status(200).json({
+            success: true,
+            movie
         });
-      }
 
-      // If reviews is not 'true', just return the movie data
-      return res.json({
-        success: true,
-        movie
-      });
-
-    } catch (error) {
-      console.error(error);
-      return res.status(500).json({ success: false, message: 'Error retrieving movie' });
+    } catch (err) {
+        console.error('Error retrieving movie:', err.message);
+        return res.status(500).json({
+            success: false,
+            message: "Error retrieving movie",
+            error: err.message
+        });
     }
   })
 
