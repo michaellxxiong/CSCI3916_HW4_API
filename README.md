@@ -65,3 +65,10 @@ Leverage the Async.js library or mongo $lookup aggregation capability to join th
 - https://cloud.google.com/appengine/docs/flexible/nodejs/integrating-with-analytics
 - https://caolan.github.io/async/index.html
 - https://support.google.com/analytics/answer/2709829
+
+## Postman
+- This postman collection is identical to assignment 3 with the following aditions
+    - New GET request for /movies and /movies/:movieId to include the query for reviews=true. SHoudl return reviews.
+    - New /movies/:movieId/review routes to add a review given a movieId. Only POST should work, GET, PUT, and DELETE are not supported.
+    - New Test conditions that fail - GET (Get a movie given Incorrect movieId) and POST (Add a Review given Incorrect movieId)
+[<img src="https://run.pstmn.io/button.svg" alt="Run In Postman" style="width: 128px; height: 32px;">](https://app.getpostman.com/run-collection/41591689-babed160-cfb9-4aee-b96d-0710c5ad2a1b?action=collection%2Ffork&source=rip_markdown&collection-url=entityId%3D41591689-babed160-cfb9-4aee-b96d-0710c5ad2a1b%26entityType%3Dcollection%26workspaceId%3Def12e5cf-fa18-4bfe-9f23-232867aca65c#?env%5BXiong%20-%204%5D=W3sia2V5IjoiSldUIiwidmFsdWUiOiIiLCJlbmFibGVkIjp0cnVlLCJ0eXBlIjoiZGVmYXVsdCIsInNlc3Npb25WYWx1ZSI6Im51bGwiLCJjb21wbGV0ZVNlc3Npb25WYWx1ZSI6Im51bGwiLCJzZXNzaW9uSW5kZXgiOjB9XQ==)
