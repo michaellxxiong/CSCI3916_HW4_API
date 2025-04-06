@@ -67,7 +67,7 @@ Leverage the Async.js library or mongo $lookup aggregation capability to join th
 - https://support.google.com/analytics/answer/2709829
 
 ## Postman
-- This postman collection is identical to assignment 3 with the following aditions
+- This postman collection is identical to assignment 3 with the following additions
     - New GET request for /movies and /movies/:movieId to include the query for reviews=true. SHoudl return reviews.
     - New /movies/:movieId/review routes to add a review given a movieId. Only POST should work, GET, PUT, and DELETE are not supported.
     - New Test conditions that fail - GET (Get a movie given Incorrect movieId) and POST (Add a Review given Incorrect movieId)
