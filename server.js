@@ -179,24 +179,62 @@ router.route('/movies/:movieId')
   //Get movie given movieId
   .get(authJwtController.isAuthenticated, async (req, res) => {
     const { movieId } = req.params;  // Extract movieId from URL parameters
+    const { reviews } = req.query;   // Extract 'reviews' query parameter
 
     try {
-        // Find the movie by its ObjectId
-        const movie = await Movie.findById(movieId);
-
-        // If the movie is not found, return a 404
-        if (!movie) {
-            return res.status(404).json({
+        // Validate the movieId format
+        if (!mongoose.Types.ObjectId.isValid(movieId)) {
+            return res.status(400).json({
                 success: false,
-                message: `Movie with id "${movieId}" not found.`
+                message: 'Invalid movieId format.'
             });
         }
 
-        // Return the found movie
-        return res.status(200).json({
-            success: true,
-            movie
-        });
+        // If reviews=true is provided, perform aggregation with $lookup to get reviews
+        if (reviews === 'true') {
+            const movie = await Movie.aggregate([
+                { 
+                    $match: { _id: mongoose.Types.ObjectId(movieId) } // Match movieId
+                },
+                {
+                    $lookup: {
+                        from: 'reviews', // The 'reviews' collection
+                        localField: '_id', // Field in the 'Movie' collection
+                        foreignField: 'movieId', // Field in the 'Review' collection
+                        as: 'reviews' // The output array containing reviews
+                    }
+                }
+            ]);
+
+            // If the movie is not found, return a 404
+            if (!movie || movie.length === 0) {
+                return res.status(404).json({
+                    success: false,
+                    message: `Movie with id "${movieId}" not found.`
+                });
+            }
+
+            return res.status(200).json({
+                success: true,
+                movie: movie[0] // Return the movie with reviews in the 'reviews' field
+            });
+        } else {
+            // Default to finding the movie without reviews
+            const movie = await Movie.findById(movieId);
+
+            // If the movie is not found, return a 404
+            if (!movie) {
+                return res.status(404).json({
+                    success: false,
+                    message: `Movie with id "${movieId}" not found.`
+                });
+            }
+
+            return res.status(200).json({
+                success: true,
+                movie // Return the movie without reviews
+            });
+        }
 
     } catch (err) {
         console.error('Error retrieving movie:', err.message);
