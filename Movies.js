@@ -28,6 +28,7 @@ var MovieSchema = new Schema({
     characterName: String,
   }],
   imageUrl: String,
+  avgRating: Int32,
 });
 
 module.exports = mongoose.model('Movie', MovieSchema);
